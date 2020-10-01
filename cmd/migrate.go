@@ -4,28 +4,58 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+	"io/ioutil"
 
 	"github.com/andersonlira/goutils/io"
+	"github.com/andersonlira/purchase-api/domain"
+	"github.com/andersonlira/purchase-api/gateway/txtdb"
 )
 
 var source string
-var target string
+
+var markets = map[string]string{
+	"Continente":"4a26b45b-7fb2-1fe1-ad87-629d6c83b081",
+	"Decathlon":"41ed62f1-80b9-cc79-931d-b5bb755842eb",
+	"E'leclerc":"2e4f651d-ee14-2a9b-6385-2fab9b6c9e65",
+	"Intermarché":"73528e21-2f80-880b-d9df-a42238e7f6e4",
+	"Lidl":"bec302b0-0640-f486-67ee-86166e523647",
+	"Minipreço":"e3266429-5a30-3181-758d-0e4d22c1e21f",
+	"Outro":"ed34a30c-804e-7a00-6a4b-23163b64a534",
+	"Pingo Doce":"6cb9cfcb-67cd-7a8b-7c7c-797bd573f9bb",
+}
 
 func main(){
 	
 	fmt.Println("Starting migration")
-	if len(os.Args) != 3{
-		panic("usage: cmd <source> <target>")
+	if len(os.Args) != 2{
+		panic("usage: cmd <source>")
 	}
 
 	source = os.Args[1]
-	target = os.Args[2]
 
-	purchases := getPurchases("f8ea6fdf-3846-bfca-a739-b8b3ed62b15d")
+	files := getFiles()
 
-	for _, p := range purchases {
-		fmt.Println(p.ID, p.Market)
+	for idx,file := range files {
+		fmt.Printf("Processing %d of %d - %s\n",idx+1,len(files),file)
+		purchases := getPurchases(file)
+
+		for _, p := range purchases {
+			purchase := domain.Purchase{}
+			purchase.CreatedAt = p.When
+			purchase.ItemID = file
+			purchase.Price = p.Price
+			
+			marketID, _ := markets[p.Market]
+
+			if marketID == "" {
+				marketID = markets["Outro"]
+			}
+			purchase.MarketID = marketID
+			purchase.Qtd = float32(p.Qtd)
+			txtdb.SavePurchase(purchase)
+		}
 	}
 }
 
@@ -42,4 +72,17 @@ func getPurchases(ID string) []purchase {
 	listTxt, _ := io.ReadFile(fmt.Sprintf("%s/%s.json",source, ID))
 	json.Unmarshal([]byte(listTxt), &purchases)
 	return purchases
+}
+
+
+func getFiles() (list []string) {
+    files, err := ioutil.ReadDir(source)
+    if err != nil {
+    	panic(err)
+    }
+	
+    for _, f := range files {
+			list = append(list,strings.ReplaceAll(f.Name(),".json",""))
+	}
+	return list	
 }
