@@ -1,7 +1,6 @@
 package usecase 
 
 import (
-	"errors"
 	"github.com/andersonlira/purchase-api/domain"
 	"github.com/andersonlira/purchase-api/gateway/itemapi"
 )

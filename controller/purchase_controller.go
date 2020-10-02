@@ -4,6 +4,7 @@ import (
     "net/http"
 
     "github.com/andersonlira/purchase-api/gateway/txtdb"
+    "github.com/andersonlira/purchase-api/usecase"
     "github.com/andersonlira/purchase-api/domain"
 	"github.com/labstack/echo/v4"
 
@@ -32,7 +33,7 @@ func GetPurchaseByID(c echo.Context) error {
 func SavePurchase(c echo.Context) error {
     it := domain.Purchase{}
     c.Bind(&it)
-    it = txtdb.SavePurchase(it)
+    it = usecase.SavePurchaseUseCase(it)
     return c.JSON(http.StatusCreated, it)
 }
 
@@ -40,7 +41,7 @@ func UpdatePurchase(c echo.Context) error {
     ID := c.Param("id")
     it := domain.Purchase{}
     c.Bind(&it)
-    it = txtdb.UpdatePurchase(ID,it)
+    it = usecase.UpdatePurchaseUseCase(ID,it)
     return c.JSON(http.StatusOK, it)
 }
 
