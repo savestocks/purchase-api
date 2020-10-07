@@ -11,13 +11,13 @@ func UpdateItemPriceUseCase(purchase domain.Purchase) error {
 	low, high := getStatistics(list,purchase.Price)
 	var err error
 	if  purchase.Price <= low {
-		err =  itemapi.UpdateItemPriceApi(domain.ItemPrice{purchase.ID,purchase.Price},"lowest")
+		err =  itemapi.UpdateItemPriceApi(purchase.ItemID, domain.ItemPrice{purchase.ID,purchase.Price},"lowest")
 	}
 	if err == nil && purchase.Price >= high{
-		err = itemapi.UpdateItemPriceApi(domain.ItemPrice{purchase.ID,purchase.Price},"highest")
+		err = itemapi.UpdateItemPriceApi(purchase.ItemID, domain.ItemPrice{purchase.ID,purchase.Price},"highest")
 	}
 	if err == nil {
-		err = itemapi.UpdateItemPriceApi(domain.ItemPrice{purchase.ID,purchase.Price},"last")
+		err = itemapi.UpdateItemPriceApi(purchase.ItemID, domain.ItemPrice{purchase.ID,purchase.Price},"last")
 	}
 
 	return err

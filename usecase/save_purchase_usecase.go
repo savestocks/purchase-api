@@ -7,6 +7,8 @@ import (
 
 //SavePurchaseUseCase save a domain.Purchase object
 func SavePurchaseUseCase(it domain.Purchase) domain.Purchase {
-	return txtdb.SavePurchase(it)
+	it = txtdb.SavePurchase(it)
+	UpdateItemPriceUseCase(it)
+	return it
 }
 
