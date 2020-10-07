@@ -19,6 +19,7 @@ func UpdateItemPriceApi(ID string, itemPrice domain.ItemPrice, endpoint string) 
 	url := fmt.Sprintf("%s/%s/price/%s", server,ID,endpoint)
 	json, _ := json.Marshal(itemPrice)
 	request, err := http.NewRequest("PATCH", url, strings.NewReader(string(json)))
+	request.Header.Set("Content-Type", "application/json")
 	request.SetBasicAuth(user,pass)
 	_, err = client.Do(request)
 	if err != nil {
