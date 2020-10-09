@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 	"io/ioutil"
 
 	"github.com/andersonlira/goutils/io"
 	"github.com/andersonlira/purchase-api/domain"
-	"github.com/andersonlira/purchase-api/gateway/txtdb"
+	"github.com/andersonlira/purchase-api/usecase"
 )
 
 var source string
@@ -26,9 +27,11 @@ var markets = map[string]string{
 	"Pingo Doce":"6cb9cfcb-67cd-7a8b-7c7c-797bd573f9bb",
 }
 
+var wg sync.WaitGroup
+
 func main(){
-	
-	fmt.Println("Starting migration")
+
+	fmt.Println("Starting migration Purcahse")
 	if len(os.Args) != 2{
 		panic("usage: cmd <source>")
 	}
@@ -42,6 +45,7 @@ func main(){
 		purchases := getPurchases(file)
 
 		for _, p := range purchases {
+			wg.Add(1)
 			purchase := domain.Purchase{}
 			purchase.CreatedAt = p.When
 			purchase.ItemID = file
@@ -54,9 +58,18 @@ func main(){
 			}
 			purchase.MarketID = marketID
 			purchase.Qtd = float32(p.Qtd)
-			txtdb.SavePurchase(purchase)
+			go worker(purchase)
 		}
+
+
 	}
+	wg.Wait()
+
+}
+
+func worker(purchase domain.Purchase){
+	defer wg.Done()
+	usecase.SavePurchaseUseCase(purchase)
 }
 
 type purchase struct {
