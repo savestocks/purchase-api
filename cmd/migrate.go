@@ -41,25 +41,11 @@ func main(){
 	files := getFiles()
 
 	for idx,file := range files {
+		wg.Add(1)
 		fmt.Printf("Processing %d of %d - %s\n",idx+1,len(files),file)
 		purchases := getPurchases(file)
+		go worker(purchases,file)
 
-		for _, p := range purchases {
-			wg.Add(1)
-			purchase := domain.Purchase{}
-			purchase.CreatedAt = p.When
-			purchase.ItemID = file
-			purchase.Price = p.Price
-			
-			marketID, _ := markets[p.Market]
-
-			if marketID == "" {
-				marketID = markets["Outro"]
-			}
-			purchase.MarketID = marketID
-			purchase.Qtd = float32(p.Qtd)
-			go worker(purchase)
-		}
 
 
 	}
@@ -67,9 +53,24 @@ func main(){
 
 }
 
-func worker(purchase domain.Purchase){
+func worker(purchases []purchase,file string){
 	defer wg.Done()
-	usecase.SavePurchaseUseCase(purchase)
+	for idx, p := range purchases {
+		fmt.Printf("   Item %s processing %d of %d\n",file,idx + 1 ,len(purchases))
+		purchase := domain.Purchase{}
+		purchase.CreatedAt = p.When
+		purchase.ItemID = file
+		purchase.Price = p.Price
+		
+		marketID, _ := markets[p.Market]
+
+		if marketID == "" {
+			marketID = markets["Outro"]
+		}
+		purchase.MarketID = marketID
+		purchase.Qtd = float32(p.Qtd)
+		usecase.SavePurchaseUseCase(purchase)
+	}
 }
 
 type purchase struct {
