@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"encoding/base64"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/andersonlira/purchase-api/config"
 	"github.com/labstack/echo-contrib/prometheus"
@@ -22,15 +25,11 @@ func MapRoutes(e *echo.Echo) {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST, echo.DELETE, echo.OPTIONS},
 	}))
 
-	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		key := os.Getenv("apikey")
-		secret := os.Getenv("apisecret")
-		if username == key && password == secret {
-			return true, nil
-		}
-		return false, nil
-	}))	
+	e.Use(BasicAuth)
 
+
+	g.OPTIONS("/purchase",getDefaultOptions)
+	g.OPTIONS("/purchase/:itemId",getDefaultOptions)
 	g.GET("/purchase/:itemId", GetPurchaseList)
 	g.GET("/purchase/:itemId/:id", GetPurchaseByID)
 	g.POST("/purchase", SavePurchase)
@@ -38,4 +37,31 @@ func MapRoutes(e *echo.Echo) {
 	g.DELETE("/purchase/:itemId/:id", DeletePurchase)
 	g.GET("/health", CheckHealth)
 	g.GET("/info", GetInfo)
+}
+
+func getDefaultOptions(e echo.Context) error {
+	return nil
+}
+// BasicAuth is the middleware function to enabled options
+func BasicAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Request().Method == echo.OPTIONS || c.Request().Method == echo.HEAD {
+			next(c)
+			return nil
+		}
+        auth := strings.SplitN(c.Request().Header.Get("Authorization"), " ", 2)
+
+        if len(auth) != 2 || auth[0] != "Basic" {
+            return nil
+        }
+
+        payload, _ := base64.StdEncoding.DecodeString(auth[1])
+        pair := strings.SplitN(string(payload), ":", 2)
+
+        if len(pair) == 2 && pair[0] == os.Getenv("apikey") && pair[1] == os.Getenv("apisecret") {
+			next(c)
+            return nil
+		}
+		return c.JSON(http.StatusUnauthorized, nil)
+	}
 }
