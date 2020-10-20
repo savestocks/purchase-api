@@ -25,7 +25,7 @@ func MapRoutes(e *echo.Echo) {
 		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.POST, echo.DELETE, echo.OPTIONS},
 	}))
 
-	e.Use(BasicAuth)
+	g.Use(BasicAuth)
 
 
 	g.OPTIONS("/purchase",getDefaultOptions)
@@ -39,8 +39,8 @@ func MapRoutes(e *echo.Echo) {
 	g.GET("/info", GetInfo)
 }
 
-func getDefaultOptions(e echo.Context) error {
-	return nil
+func getDefaultOptions(c echo.Context) error {
+	return c.JSON(http.StatusNoContent,nil)
 }
 // BasicAuth is the middleware function to enabled options
 func BasicAuth(next echo.HandlerFunc) echo.HandlerFunc {
