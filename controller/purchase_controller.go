@@ -52,3 +52,10 @@ func DeletePurchase(c echo.Context) error {
     result := txtdb.DeletePurchase(ID,itemID)
     return c.JSON(http.StatusOK, result)
 }
+
+func RemoveOldPurchase(c echo.Context) error {
+    IDS := []string{}
+    c.Bind(&IDS)
+    result := usecase.RemoveOldPurchaseUseCase(IDS)
+    return c.JSON(http.StatusOK, result)
+}
