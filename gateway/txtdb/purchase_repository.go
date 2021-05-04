@@ -40,7 +40,7 @@ func SavePurchase(it domain.Purchase) domain.Purchase {
 	it.ID = str.NewUUID()
 	it.CreatedAt = time.Now()
 	list = append(list, it)
-	writePurchase(list)
+	writePurchase(list,it.ItemID)
 	return it
 }
 
@@ -52,7 +52,7 @@ func UpdatePurchase(ID string, it domain.Purchase) domain.Purchase{
 			list[idx] = it
 			list[idx].ID = ID
 			list[idx].UpdatedAt = time.Now()
-			writePurchase(list)
+			writePurchase(list,it.ItemID)
 			return list[idx]
 		}
 	}
@@ -65,18 +65,31 @@ func DeletePurchase(ID string,itemID string) bool {
 	for idx, _ := range list {
 		if(list[idx].ID == ID){
 			list = append(list[:idx], list[idx+1:]...)
-			writePurchase(list)
+			writePurchase(list,itemID)
 			return true
 		}
 	}
 	return false
 }
 
-func writePurchase(list []domain.Purchase) {
+func DeleteOld(itemID string,date time.Time) bool { 
+	purchases := GetPurchaseList(itemID)
+
+	for _, purchase := range purchases {
+		if purchase.CreatedAt.Before(date) {
+			DeletePurchase(purchase.ID, itemID)
+
+		}
+	}
+
+	return true
+}
+
+func writePurchase(list []domain.Purchase, itemID string) {
 	if len(list) == 0 {
+		io.WriteFile(fmt.Sprintf("bd/%s.json", itemID), string("[]"))
 		return 
 	}
-	itemID := list[0].ItemID
 	b, err := json.Marshal(list)
 	if err != nil {
 		log.Println("Error while writiong file items")
