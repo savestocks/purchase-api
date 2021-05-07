@@ -1,22 +1,29 @@
 package usecase
 
 import (
+	"regexp"
 	"time"
-	//"github.com/andersonlira/purchase-api/domain"
+	"github.com/andersonlira/goutils/io"
 	"github.com/andersonlira/purchase-api/gateway/txtdb"
 )
 
 //SavePurchaseUseCase save a domain.Purchase object
-func RemoveOldPurchaseUseCase(IDS []string) bool {
-
+func RemoveOldPurchaseUseCase() bool {
 	sixMonthsAgo := time.Now().AddDate(0,-6,0)
 
-	for _, ID := range IDS {
+	for _, ID := range getIDS() {
 		txtdb.DeleteOld(ID,sixMonthsAgo)
 	}
 
-	//it = txtdb.GetPurchaseList(it)
-	//UpdateItemPriceUseCase(it)
 	return true
 }
 
+func getIDS() (IDS []string) {
+	files, _ := io.ListFiles("bd/",[]string{"json"})
+	for _, file := range files {
+		re := regexp.MustCompile(`(.*)[/ | \\](.*)(\.json)`)
+		ID := re.ReplaceAllString(file, "$2")
+		IDS = append(IDS, ID)
+	}
+	return
+}
