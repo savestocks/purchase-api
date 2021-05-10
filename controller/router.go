@@ -30,6 +30,7 @@ func MapRoutes(e *echo.Echo) {
 
 	g.OPTIONS("/purchase",getDefaultOptions)
 	g.OPTIONS("/purchase/:itemId",getDefaultOptions)
+	g.OPTIONS("/purchase/:itemId/:id", getDefaultOptions)
 	g.OPTIONS("/purchase/remove-old",getDefaultOptions)
 	g.GET("/purchase/:itemId", GetPurchaseList)
 	g.GET("/purchase/:itemId/:id", GetPurchaseByID)
