@@ -9,7 +9,7 @@ import (
 
 //SavePurchaseUseCase save a domain.Purchase object
 func RemoveOldPurchaseUseCase() bool {
-	sixMonthsAgo := time.Now().AddDate(0,-6,0)
+	sixMonthsAgo := time.Now().AddDate(-1,0,0)
 
 	for _, ID := range getIDS() {
 		txtdb.DeleteOld(ID,sixMonthsAgo)
